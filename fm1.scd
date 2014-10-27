@@ -27,18 +27,23 @@ s.recSampleFormat="int32";
 s.record(file);
 )
 s.stopRecording;
-
+b = Buffer.alloc(s, s.sampleRate * 1, 1);
 // phase modulation
 (
 SynthDef(\pmosc16,{ |freq, amp|
-	var delta = 0.03;
+	var delta = 0.01;
+	var siga;
+	var tapPhase,tap1,tap2,tap3;
 	var dur = In.kr(m[3])*3;
 	var f1 = {rrand(1-delta,1+delta)}!16;
 	var f2 = {rrand(1-delta,1+delta)}!16;
 	var env = EnvGen.ar(Env.perc(0.0001,dur),doneAction:2);
 	var sig = PMOsc.ar((3*In.kr(m[0]) + freq)*f1,(3*In.kr(m[1]) + freq) * f2, 3, mul: 0.5);
-	sig = Pan2.ar(Mix.ar(sig));
-	Out.ar(0,sig * amp*0.1*env)
+	sig = RLPF.ar(sig, In.kr(m[2])*400,In.kr(m[4]));
+	siga = DelayL.ar(sig,0.1,In.kr(m[8]).poll*0.01);
+	sig = sig + (In.kr([9])*siga);
+	sig = Pan2.ar(Mix.ar(Normalizer.ar(sig)));
+	Out.ar(0,In.kr(m[15])*sig * amp*0.1*env)
 }).add;
 )
 
