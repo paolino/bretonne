@@ -13,7 +13,7 @@ Array.fill(8,{arg i;CCResponder({|s,ch,c,v| m[i+8].set(v/128)},nil,1,i+41)})
 
 
 (
-c = NoteOnResponder({ |src,chan,note,vel| Synth(\pmosc16,[\freq,note.midicps,\amp,vel/128])})
+c = NoteOnResponder({ |src,chan,note,vel| Synth(\violin,[\freq,note.midicps,\amp,vel/128])})
 )
 (
 c = NoteOnResponder({ |src,chan,note,vel| [chan,note,vel].postln})
@@ -70,8 +70,24 @@ SynthDef(\pmosc16,{ |freq, amp|
 	Out.ar(0,In.kr(m[15])*sig * amp*0.1*env)
 }).add;
 )
+(
+SynthDef(\violin,{ |freq, amp|
+	var delta = 0.01;
+	var siga;
+	var tapPhase,tap1,tap2,tap3;
+	var dur = In.kr(m[3])*3;
+	var f1 = {rrand(1-delta,1+delta)}!16;
+	var f2 = {rrand(1-delta,1+delta)}!16;
+	var env = EnvGen.ar(Env.perc(0.1,dur),doneAction:2);
+	var sig = Saw.ar([freq,freq*2]);
+	sig = RLPF.ar(sig, In.kr(m[2])*400,In.kr(m[4]));
+	sig= Klank.ar(`[[300, 350, 1000], nil, [1, 1, 1, 1]], sig);
+	sig = RHPF.ar(sig, (In.kr(m[6])*400),In.kr(m[7]));
 
-
+	sig = Pan2.ar(Mix.ar(Normalizer.ar(sig)));
+	Out.ar(0,In.kr(m[15])*sig * amp*1*env)
+}).add;
+)
 
 {SinOsc.ar(500, mul: SinOsc.ar(250, mul: 0.5))}.scope(1)
 (
