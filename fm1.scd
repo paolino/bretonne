@@ -21,7 +21,7 @@ c = NoteOnResponder({ |src,chan,note,vel| [chan,note,vel].postln})
 
 // recording
 (
-var file = "fm3.wav"
+var file = "fr.wav";
 s.recHeaderFormat="wav";
 s.recSampleFormat="int32";
 s.record(file);

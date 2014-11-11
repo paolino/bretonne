@@ -2,72 +2,60 @@ s.boot;
 FreqScope();
 FreqScopeView();
 
-// map controller
-(
-m = {Bus.control()}!24;
-c =  Array.fill(8,{arg i;CCResponder({|s,ch,c,v| m[i].set(v/128)},nil,1,i+21)}) ++
-Array.fill(16,{arg i;CCResponder({|s,ch,c,v| m[i+8].set(v/128)},nil,1,i+41)})
-
-)
-NoteOnResponder({|s,ch,c,v| m},nil,1,nil);
-// map notes
-s.boot // Boot the server, if you need to
-
-// read a whole sound into memory
-// note: not *that* columbia, the first one
-b = Buffer.read(s, "/home/paolino/music/WAV/ByType/Kick/Fl_Pdkmh_Antepaste_Kick1.wav",0,-1,nil,2); // remember to free the
-Buffer.read(s,"/home/paolino/music/WAV/ByType/Kick/Fl_Pdkmh_Derelict_Kick1.wav" ,0,-1,nil,2); // remember to
-Buffer.read(s,"/home/paolino/music/WAV/ByType/HiHat/TF01_Eckle_Hihat6.wav",0,-1,nil,2); // remember to
-Buffer.read(s,"/home/paolino/music/WAV/ByType/HiHat/TF01_Acaer_Hihat2.wav",0,-1,nil,2); // remember to
-Buffer.read(s,"/home/paolino/music/WAV/ByType/HiHat/TF01_Acaer_Hihat3.wav",0,-1,nil,2); // remember to
-Buffer.read(s,"/home/paolino/music/WAV/ByType/Percussion/TF01_Chillaid_Percussion2.wav",0,-1,nil,2); // remember to
-Buffer.read(s,"/home/paolino/music/Kurzweil Kit 01/CYCdh_Kurz01-Kick03.wav",0,-1,nil,2); // remember to
-Buffer.read(s,"/home/paolino/music/- 4- Viento 'e terra slice 0A.wav",0,-1,nil,2); // remember to
-Buffer.read(s,"/home/paolino/music/10-05-2014-00:19.wav",0,-1,nil,2); // remember to
-Buffer.read(s,"/home/paolino/music/Untitled (122 BPM)_Track 05.wav",0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
-Buffer.read(s,,0,-1,nil,2); // remember to
 
 
 f = {|n| Lag.kr(In.kr(m[n]),0.1)}
+
+
+Buffer.read(s,"/usr/local/share/renoise-3.0.0/Library/Samples/HiHats/Closed/dh_clhat_loose_groovy.flac",0,-1,nil,2); // remember to
+Buffer.read(s,"/usr/local/share/renoise-3.0.0/Library/Samples/HiHats/Closed/dh_clhat_loose_acid.flac",0,-1,nil,2); // remember to
+ // remember to
+Buffer.read(s,,0,-1,nil,2); // remember to
+Buffer.read(s,,0,-1,nil,2); // remember to
+Buffer.read(s,,0,-1,nil,2); // remember to
+Buffer.read(s,,0,-1,nil,2); // remember to
+
+
+d = Bus.control();
+
 (
-// trigger one shot on each pulse
-SynthDef(\help_PlayBuf, {| out = 0, bufnum = 0, effe|
-	var trig= Impulse.kr(f.value(15)*16);
-	var bar = Stepper.kr(trig,0,0,15,1,-1).poll;
-	var cyc = f.value(5) + ~rsin.value(bar,~sinlfobuf, 16*f.value(3),f.value(4), f.value(6));
-	var cyc2 = 1 + f.value(13) + ~rsin.value(bar,~sinlfobuf, 16*f.value(11),f.value(12), f.value(14));
-	var env=EnvGen.ar(Env.perc(0.001),trig);
-	var shcyc2 = Latch.kr(cyc2,trig);
-	var shcyc = Latch.kr(cyc,trig);
-	var ctrig = (cyc < 0.3) * trig;
-	var sig = env*f.value(0)* PlayBuf.ar(2, bufnum, shcyc2*BufRateScale.kr(bufnum), ctrig, shcyc * BufFrames.kr(bufnum), 0);
-	sig = RHPF.ar(sig,20 + (f.value(1)*200));
-	sig = RLPF.ar(sig,1000 + (f.value(9)*10000));
+var lps = 125/15;
+var f = {|n| Lag.kr(In.kr(m[n]),0.1)}; // fluid control
+var e = Bus.control();
 
-	Out.ar(out,sig);
-
-}).play(s, [\out, 0, \bufnum, b]);
+// main line beat
+{Out.kr(d,Impulse.kr(lps))}.play;
+//
+{Out.kr(e,1 - Mix.ar
+	(SinOsc.kr
+		(lps/16*[2,3,4,5,6,7,8]
+			,f.value([0,1,2,3,4,5])*2*pi
+			,f.value([6,7,8,9,10,11]))
+	).abs
+	)}.play;
 )
 
+(
+var bufnum = Buffer.read(s,"/home/paolino/k1.wav",0,-1,nil,2);
+var out= 0;
+
+SynthDef(\help_PlayBuf, {
+    var start = In.kr(e) * BufFrames.kr(bufnum)/(1 + 4 * f.value(14));
+	var sig =   PlayBuf.ar(2, bufnum, BufRateScale.kr(bufnum), In.kr(d), start , 0);
+	var env = EnvGen.ar(Env.linen(0.01,0.9*15/125-0.03,0.01),In.kr(d));
+	Out.ar(out,f.value(12) *  env  * sig );
+
+}).play;
+)
+
+Synth(\help_PlayBuf);
 
 (
 // note, asWavetable is false b/c BufRd doesn’t use wavetable format
 ~sinlfobuf = Buffer.alloc(s, 1024, 1, completionMessage: { |buf|
    buf.sine1Msg(#[1], asWavetable: false);
 });
-~rsin = {|t_reset = 0, lfobuf, lfofreq = 1, lfoamp = 0.1, phase |
+~rsinosc = {|t_reset = 0, lfobuf, lfofreq = 1, lfoamp = 0.1, phase = 0 |
 	  var   lfosize = BufFrames.kr(lfobuf),
       ph = Phasor.kr(t_reset, lfofreq / ControlRate.ir, 0.0, 1.0);
 	BufRd.kr(1, lfobuf, lfosize * (ph + phase), interpolation: 1)*lfoamp;
@@ -88,5 +76,5 @@ a.set(\t_rese,t, 1);
 a.free;
 
 
-
+"/home/paolino/k1.wav"
 
