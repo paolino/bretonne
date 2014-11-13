@@ -49,9 +49,9 @@ FreqScope()
 (
 {
     var a, freq, trig;
-    a = Dseries(0, 1, inf);
-    trig = Impulse.kr(MouseX.kr(1, 40, 1));
-    freq = Demand.kr(trig, 0, a) % 15 * 30 + 340;
+	a = Dseq([~c.value(0),~c.value(1), 2 - ~c.value(0)- ~c.value(1)]  , inf);
+    trig = Impulse.ar(0.5);
+	freq = TDuty.ar(a,0, Dseq([100,200,50,200],inf));
     SinOsc.ar(freq) * 0.1
 
 }.play;
@@ -67,6 +67,28 @@ FreqScope()
 }.play;
 )
 
+~so = Bus.control();
+
+~so.scope;
+MIDIClient.init
+MIDIIn.sysrt ={|v,i,da| if(i==0,{~so.set(1)},{~so.set(0)})}
+(
+    {
+        var trig;
+	var seq = 7.collect({|i| (~c.value(i)*8).floor + 1 / 8});
+	var seq2 = 8.collect({|i| (80 + (~c.value(i + 8) - 0.5 *80)).cpsmidi.floor.midicps});
+	var env;
+	var last = 2 - Mix.kr(seq);
+        trig = TDuty.ar(
+		Dseq(seq ++ [10], inf), // demand ugen as durations
+		T2A.ar(In.kr(~so)),
+                Dseq(seq2, inf) // demand ugen as amplitude
+            );
+	env = EnvGen.ar(Env.perc(0.01,0.4),trig);
+	Pan2.ar(Mix.ar(env * (VarSaw.ar(Lag.ar(Latch.ar(trig,trig),0.2), 0,0.5, 1))))
+
+    }.play;
+)
 
 
 (
