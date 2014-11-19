@@ -8,11 +8,14 @@ s.boot;
 		var n2 = n;
 		if(ls[n%l]==true ,{p = (p + 1)%ro.size},{ls[n%l]=true});
 		n = (n + ro[p]);
+
 		[Scale.minor.degreeToFreq((i*h%(j*h)+m),80,0),(n2%l).floor]
+
 	});
 };
 
 ~puncher = {
+
 	arg bnum,nn,bn,ts,nd,width,int,bars,disp;
 	var seq = ~seq.value(nn,bn,ts,nd,width,int);
 	~help = seq;
@@ -23,6 +26,7 @@ s.boot;
 		\bufnum,bnum,
 		\freq,lo[0],
 			\amp,70/lo[0],
+
 		\where,w
 		]
 		)
@@ -30,6 +34,7 @@ s.boot;
 	)
 };
 )
+
 
 ~b1 = Buffer.alloc(s, Server.local.sampleRate * 2.0, 1,18); // a four second 1 channel Buffer
 ~b2 = Buffer.alloc(s, Server.local.sampleRate * 2.0, 1,19); // a four second 1 channel Buffer
@@ -54,16 +59,19 @@ SynthDef(name:\punch,ugenGraphFunc:
 
 		var env2 = EnvGen.ar(Env.perc);
 
+
 		var sig = LFTri.ar([freq],env2);
 		var env = EnvGen.ar(envelope:Env.perc(0.05,0.3,curve:-5));
 		sig = RLPF.ar(FreqShift.ar(sig,SinOsc.ar(12)*8),1600);
 	sig = DelayL.ar(Mix.ar(sig*env*[amp,amp/4]),0.2,0.04);
 		RecordBuf.ar(sig,bufnum,offset:where,recLevel:1,preLevel:1);
 		DetectSilence.ar(sig,0.00001,0.1,2);
+
         0
 }).send
 
 );
+
 ~tdbuf.set(~b2.bufnum);
 (
 ~punchit = {|b,nn,bn,ts,nd,width,int,bars,disp|
