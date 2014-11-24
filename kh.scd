@@ -1,4 +1,5 @@
 //global setup
+
 /*
 
 ~makeNRPNResp = { |parmnum = 0, action|
@@ -212,13 +213,12 @@ s.waitForBoot({
 
 )
 
-
-
 (
 ~pinger.free;
 ~pinger = {Out.kr(~ping,Impulse.kr(1/~linedur))}.play;
 ~resetter.free;
 ~resetter= {DelayL.kr(Out.kr(~reset,PulseDivider.kr(In.kr(~ping),16)),0.1,0.05)}.play;
+
 
 
 
