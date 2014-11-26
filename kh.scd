@@ -58,6 +58,7 @@ s.waitForBoot({
 
 	timses = {|n,tsig| Sweep.kr(tsig,0.1 + (10/~control.value(n).linexp(0,1,1,20)) )};
 
+
 	// sound groover
 	~linedelay = {|c,sig| DelayL.ar(sig,0.1*~linedur,~linedur*0.1*c)};
 
@@ -90,12 +91,14 @@ s.waitForBoot({
 		RecordBuf.ar(env*In.ar(~mixer,2),~record,run:SetResetFF.kr(trig),loop:0);
 		RecordBuf.ar(env*In.ar(~mixer,2),~recordmixed,run:SetResetFF.kr(trig),loop:0,doneAction:2)
 
+
 	}).send;
 	SynthDef(\repeatrecorder,{
 		var trig = In.kr(~reset);
 		var env = EnvGen.ar(Env.linen(0.001,~lines * ~linedur-0.003,0.001),trig);
 		RecordBuf.ar(env*In.ar(~repeatout,2),~repeatrecord,run:SetResetFF.kr(trig),loop:0);
 		RecordBuf.ar(env*In.ar(~repeatout,2),~recordmixed,recLevel:1,preLevel:1,run:SetResetFF.kr(trig),loop:0,doneAction:2)
+
 
 	}).send;
 
@@ -146,17 +149,17 @@ s.waitForBoot({
 	SynthDef(\repeat,{
 		arg control;
 		var cntrl = {|n| Lag.kr(In.kr((control + n)),0.1)};
-
+		var qcntrl = {|n,q| (cntrl.(n)*q).floor/q};
 		var dur = cntrl.value(2)*BufDur.kr(~record);
 		var nstart = cntrl.value(0)* BufDur.kr(~record);
 		var where = cntrl.value(1)*BufSamples.kr(~record);
 		var rate,env2,sig,env,noise,envnoise,sines,envsines,tri,envtri,start;
 		start = DelayL.kr(In.kr(~reset),BufDur.kr(~record),nstart);
 
-		rate = ((cntrl.value(4)*16) + 1) * ~linedur/2;
-		sines = Phasor.kr(start,1/rate/ControlRate.ir,-0.5,0.5);
+		rate = ((cntrl.value(4)*16)).floor * ~linedur;
+		sines = Phasor.kr(start,1/rate/ControlRate.ir,-0.5,0.5,-0.0001);
 
-		env2 = EnvGen.ar(Env.perc(0.01,rate,curve:0),sines);
+		env2 = EnvGen.ar(Env.perc(0.001,rate,curve:0),sines);
 
 		//var stop = Stepper.kr(In.kr(~ping),In.kr(~reset),0,7,1,nstop + nstart);
 		env = EnvGen.ar(Env.perc(0.001*dur,dur,curve:0),start);
@@ -209,9 +212,11 @@ s.waitForBoot({
 	)
 
 
+
 });
 
 )
+
 
 (
 ~pinger.free;
@@ -260,9 +265,13 @@ s.waitForBoot({
 ~mixer.scope()
 
 	~record.plot()
+
+
 	~recordmixed.plot()
 
 
+~setversion.value(1);
 
-~setversion.value(2);
-~version=5;
+~version=7
+
+
