@@ -1,19 +1,30 @@
 ProxySpace.new.push
-~x.play
-~x = {Pan2.ar(Mix.ar(~y.ar + (0.2* ~lfm.ar)))}
 
-~y = {SinOsc.ar(~f)*~z}
+~x.play;
+~x = {Pan2.ar(Mix.ar( ~y.ar ))};
 
-~z = {|ts=1| EnvGen.ar(Env.perc(curve:-8),~t,timeScale:ts)}
-~zf = {EnvGen.ar(Env.perc,~t,timeScale:4)}
-~zfm = {EnvGen.ar(Env.perc,~t,timeScale:0.1)}
+~y = {Pulse.ar(~f,0.4)*~z};
+~z = {|ts=1| EnvGen.ar(Env.perc(curve:-8),~t,timeScale:0.4)};
+~zf = {EnvGen.ar(Env.perc,~t,timeScale:2)};
+~zfm = {EnvGen.ar(Env.perc,~t,timeScale:0.1)};
 
-~t = {Impulse.kr(25/12)}
-~f = {|d=70| ~zf * d}
+~t = {Impulse.kr(25/12)};
+~f = {|d=70| ~zf * d};
 
-~fm = {LFTri.ar(50 *  SinOsc.ar(501))}
+~fm = {LFTri.ar(60 *  SinOsc.ar(101))};
 
-~lfm = {RLPF.ar(~fm.ar,500)*~zfm}
+~lfm = {RLPF.ar(~fm.ar,500)*~zfm};
+
+~x.scope
+
+~y = { Klank.ar(`[[60], nil, [1]], ~y2.ar*0.01) * ~z};
+~y2 = { Klank.ar(`[[60], nil, [0.1]], PinkNoise.ar())};
+
+
+
+
+
+
 
 w = Window.new("GUI Introduction", Rect(200,200,255,100));
 b = Button.new(w,Rect(10,0,80,30)).states_([["Hide"],["Show"]]);
@@ -35,4 +46,3 @@ w=Window().layout_( GridLayout.rows(
     [[Slider().orientation_(\horizontal), columns:2]]
 )).front;
 )
-~x.scope
